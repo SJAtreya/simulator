@@ -7,11 +7,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.gto.iot.stream.DriveSpeed;
 import com.gto.iot.stream.Location;
 import com.gto.iot.stream.TripData;
 import com.gto.iot.util.TcpClient;
+
 
 public class TimeseriesSimulator implements Runnable {
 
@@ -22,7 +24,17 @@ public class TimeseriesSimulator implements Runnable {
 	private volatile Location lastKnownLocation;
 
 	private boolean running = true;
+	
+	private volatile double initLat = 0;
+	
+	private volatile double initLng = 0;
+	
+	private static final double R = 6372.8; // In kilometers
 
+	private volatile AtomicInteger totalDistance = new AtomicInteger(0);
+	
+	private static DecimalFormat decimalFormat = new DecimalFormat("####.####");
+	
 	public TimeseriesSimulator(TripData ts) {
 		timeseries = ts;
 		try {
@@ -37,8 +49,12 @@ public class TimeseriesSimulator implements Runnable {
 	public void run() {
 		// TODO Auto-generated method stub
 		List<Location> locationList = null;
+		
+		initLat =(double) ((Map) stepData.get(0).get("start_location")).get("lat");
+		initLng =(double) ((Map) stepData.get(0).get("start_location")).get("lng");
 		for (Map step : stepData) {
 			System.out.println("Starting to simulate step:" + step +", for a driver of speed:"+timeseries.getDriveSpeed());
+			totalDistance.addAndGet((int) ((Map) step.get("distance")).get("value"));
 			if (running) {
 				locationList = findAllPointsInBetween(step,
 						timeseries.getDriveSpeed());
@@ -54,25 +70,24 @@ public class TimeseriesSimulator implements Runnable {
 			}
 		}
 		// Send completion - C,vin,lat,lng,fuel,battery,distanceTravelled
-		triggerTripCompletion();
+		triggerCompletion();
 	}
 
-	private void triggerTripCompletion() {
-		// TODO Auto-generated method stub
+	private void triggerCompletion() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("C");
 		buffer.append(",");
 		buffer.append(timeseries.getVin());
 		buffer.append(",");
-		buffer.append(lastKnownLocation.getLat()); // Lat needs to give
+		buffer.append(lastKnownLocation.getLat()); 
 		buffer.append(",");
-		buffer.append(lastKnownLocation.getLon());  // Lng needs to give
+		buffer.append(lastKnownLocation.getLon());  
 		buffer.append(",");
 		buffer.append(timeseries.getBattery());
 		buffer.append(",");
 		buffer.append(timeseries.getFuel());
 		buffer.append(",");
-		buffer.append("Distance"); // Distance have to give
+		buffer.append(totalDistance.get()/1000); // Distance have to give
 		try {
 			TcpClient.sendMessage(buffer.toString());
 		} catch (IOException e) {
@@ -80,7 +95,7 @@ public class TimeseriesSimulator implements Runnable {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private void simulateStep(TripData tripData, Map step,
 			List<Location> locationList) throws InterruptedException {
 		// TODO Auto-generated method stub
@@ -109,6 +124,8 @@ public class TimeseriesSimulator implements Runnable {
 
 	private synchronized void createTimeseriesMessage(TripData tripData, Location location) {
 		// TODO Auto-generated method stub
+		double stepDistance = haversine(initLat, initLng, location.getLat(), location.getLon());
+
 		StringBuffer tcpData = new StringBuffer();
 		tcpData.append("T");
 		tcpData.append(",");
@@ -129,6 +146,8 @@ public class TimeseriesSimulator implements Runnable {
 		tcpData.append(tripData.getFuel());
 		tcpData.append(",");
 		tcpData.append(1);
+		tcpData.append(",");
+		tcpData.append(decimalFormat.format(stepDistance));
 		// Append distance
 		System.out.println(tcpData.toString());
 		try {
@@ -181,6 +200,17 @@ public class TimeseriesSimulator implements Runnable {
 			 }
 		}
 	}
+	
+	private double haversine(double lat1, double lon1, double lat2, double lon2) {
+		double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+ 
+        double a = Math.pow(Math.sin(dLat / 2),2) + Math.pow(Math.sin(dLon / 2),2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        return R * c;
+    }
 	
 //	public static void main(String[] args) {
 //		Location startLat = new Location(13.006682, 80.247369);
