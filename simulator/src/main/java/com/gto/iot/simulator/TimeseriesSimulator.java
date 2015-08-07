@@ -54,14 +54,21 @@ public class TimeseriesSimulator implements Runnable {
 			}
 		}
 		// Send completion - C,vin,lat,lng,fuel,battery,distanceTravelled
+		triggerTripCompletion();
+	}
+
+	private void triggerTripCompletion() {
+		// TODO Auto-generated method stub
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("C");
 		buffer.append(",");
 		buffer.append(timeseries.getVin());
 		buffer.append(",");
-		buffer.append("LAT"); // Lat needs to give
+		buffer.append(lastKnownLocation.getLat()); // Lat needs to give
 		buffer.append(",");
-		buffer.append("LNG");  // Lng needs to give
+		buffer.append(lastKnownLocation.getLon());  // Lng needs to give
+		buffer.append(",");
+		buffer.append(timeseries.getBattery());
 		buffer.append(",");
 		buffer.append(timeseries.getFuel());
 		buffer.append(",");
