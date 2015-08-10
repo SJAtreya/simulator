@@ -19,3 +19,5 @@ Steps to run the UI
  d) open cmd
  e) cd vms_simulator
  f) manage.py runserver
+ g) http://localhost:8000/admin (For admin console)
+ h) http://localhost:8800 (For monitoring UI)
