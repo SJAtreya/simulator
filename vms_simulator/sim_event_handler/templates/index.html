@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta content="NO-CACHE" http-equiv="CACHE-CONTROL" />
+		<meta content="NO-CACHE" http-equiv="PRAGMA" />
+		<title>
+			Vehicle Monitoring System
+		</title>
+		<link rel="stylesheet" href="{{ static_url("css/bootstrap.min.css") }}" type="text/css"/>
+		<link rel="stylesheet" href="{{ static_url("css/bootstrap-theme.min.css") }}" type="text/css"/>
+		<link rel="stylesheet" href="{{ static_url("css/styles.css") }}" type="text/css"/>
+	</head>
+	<body>
+		
+		
+		<nav class="navbar navbar-inverse">
+			<div class="container-fluid">
+				 <div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					 </button>
+					 <a class="navbar-brand" href="#"><img src="{{ static_url("images/vms.jpg") }}"></img></a>
+				 </div>
+				 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li class="active" id="fleetMenu"><a href="#monitor/fleet">Fleet</a></li>
+						<li id="tripMenu"><a href="#monitor/trip">Trips</a></li>
+						<li id="eventMenu"><a href="#monitor/event">Events</a></li>
+						<li id="simulateMenu"><a href="#simulate">Simulate</a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+		<div class="container-fluid">
+			<div class="row" id="alertContainer">
+			</div>
+			<div id="mainContainer">
+			</div>
+			<div class="loadingIcon" id="loadingIcon">
+				<img src="{{static_url("images/loading.gif")}}"></img>
+			</div>
+		</div>
+		<script type="text/javascript" src="{{ static_url("js/jquery.min.js") }}"></script>
+		<script type="text/javascript" src="{{ static_url("js/bootstrap.min.js") }}"></script>
+		<script type="text/javascript" src="{{ static_url("js/handlebars-v3.0.3.js") }}"></script>
+		<script src="https://maps.googleapis.com/maps/api/js"></script>
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
+		<script type="text/javascript" src="{{ static_url("js/common.js") }}"></script>
+		 
+		<script id="fleetTemplate" type="text/x-handlebars-template">
+			<div class="row">
+				<div class="fleetMap" id="fleetMap">
+				</div>
+			</div>
+		</script>
+		
+		<script id="tripTemplate" type="text/x-handlebars-template">
+			<div class="tripTable">
+					{{!#each trips}}
+						<div class="tripRow">
+							<div class="col-xs-3">
+								<div class="row">{{!this.driver_name}}</div>
+								<div class="row photo"><img src="{{!this.driver_photo}}"></img></div>
+							</div>
+							<div class="col-xs-3">
+								<div class="row">{{!this.vehicle_number}}</div>
+								<div class="row photo"><img src="{{!this.vehicle_photo}}"></img></div>
+							</div>
+							<div class="col-xs-6 mapCanvas" id="{{!this.vehicle_number}}_map}">
+							</div>
+						</div>
+					{{!/each}}
+			</div>
+		</script>
+		
+		<script id="simulateTemplate" type="text/x-handlebars-template">
+			<form name="simulatorForm" id="simulatorForm" class="form-inline">
+				<div class="simulateFieldSet">
+					<div class="col-xs-6 form-group">
+						<input class="form-control" id="max_trips" name="max_trips" value="{{!max_trips}}">
+						<button class="btn btn-default" type="button" id="fillTrips">Fill Trips</button>
+					</div>
+					<div id="tripDetails"></div>
+				</div>
+			</form>
+		</script>
+		<script id="eventTemplate" type="text/x-handlebars-template">
+			<div class="eventTable">
+				{{!#each events}}
+					<div class="row">
+						<div class="col-xs-3">
+							{{!this.vehicle_number}}
+						</div>
+						<div class="col-xs-3">
+							{{!this.driver_name}}
+						</div>
+						<div class="col-xs-3">
+							{{!this.type}}
+						</div>
+						<div class="col-xs-3">
+							{{!this.desc}}
+						</div>
+					</div>
+				{{!/each}}
+			</div>
+		</script>
+		
+		<script id="simulateRowTemplate" type="text/x-handlebars-template">
+			<div class="simulateRow">
+				<div class="col-xs-3">
+					Vehicle Number
+				</div>
+				<div class="col-xs-3">
+					Driver Name
+				</div>
+				<div class="col-xs-3">
+					Battery Life
+				</div>
+				<div class="col-xs-3">
+					Fuel
+				</div>
+			</div>
+			{{!#each trips}}
+				<div class="simulateRow">
+					<div class="simulateFieldSet">
+						<div class="col-xs-3 form-group">
+							<input value="{{!vehicle_number}}" name="vehicle_number_{{!@index}}" id="vehicle_number_{{!@index}}" class="form-control" readonly="readonly"/>
+						</div>
+						<div class="col-xs-3 form-group">
+							<input value="{{!driver_name}}" name="driver_name_{{!@index}}" id="driver_name_{{!@index}}" class="form-control" readonly="readonly"/>
+						</div>
+						<div class="col-xs-3 form-group">
+							<input placeholder="100" value="{{!battery}}" name="battery_{{!@index}}" id="battery_{{!@index}}"  class="form-control"/>
+						</div>
+						<div class="col-xs-3 form-group">
+							<input placeholder="15" value="{{!fuel}}" name="fuel_{{!@index}}" id="fuel_{{!@index}}" class="form-control" />
+						</div>
+					</div>
+					<div class="simulateFieldSet">
+						<div class="col-xs-6 form-group">
+							<textarea id="start_address_{{!@index}}" name="start_address_{{!@index}}" class="form-control addressField" placeholder="Start Address" cols="50"></textarea>
+						</div>
+						<div class="col-xs-6 form-group">
+							<textarea id="end_address_{{!@index}}" name="end_address_{{!@index}}" class="form-control addressField" placeholder="End Address" cols="50"></textarea>
+						</div>
+					</div>
+				</div>
+			{{!/each}}
+			<div class="simulateRow">
+				<div class="startSimulateBtn">
+					<a class="btn btn-primary" id="startSimulation">Start Simulation</a>
+				</div>
+			</div>
+		</script>
+		
+		<script>
+			var tripSource  = $("#tripTemplate").html();
+			var fleetSource = $("#fleetTemplate").html();
+			var simulateRowSource = $('#simulateRowTemplate').html();
+			var simulateSource = $('#simulateTemplate').html();
+			var eventSource = $('#eventTemplate').html();
+			var fleetTemplate = Handlebars.compile(fleetSource);
+			var tripTemplate = Handlebars.compile(tripSource);
+			var simulateRowTemplate = Handlebars.compile(simulateRowSource);
+			var simulateTemplate = Handlebars.compile(simulateSource);
+			var eventTemplate = Handlebars.compile(eventSource);
+			$(document).ready(function() {
+				setup();
+			});
+		</script>
+	</body>
+</html>
