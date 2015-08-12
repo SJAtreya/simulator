@@ -71,4 +71,12 @@ class SimulationSaveHandler(BaseHandler):
     def handleRequest(self,response):
         self.write(response.body)
 
+class SimulateEventHandler(BaseHandler):
+    @gen.coroutine
+    def post(self):
+        yield self.http_client.fetch('http://localhost:8000/simulator/accident/',self.handleRequest,method='PATCH',body=json.dumps({'vin':self.get_argument('vin')}))
+
+    def handleRequest(self,response):
+        self.write(response.body)
+
 

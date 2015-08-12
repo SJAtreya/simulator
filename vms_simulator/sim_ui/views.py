@@ -57,7 +57,7 @@ def save_simulations(simulation_data):
 
 def start_simulation(simulations):
     print 'Starting Simulation: ',simulations
-    ret_val = requests.post('http://172.25.235.155:8080/api/simulate/trip',data=json.dumps(simulations),headers={'Content-Type':'application/json'})
+    ret_val = requests.post('http://172.25.235.146:8080/api/simulate/trip',data=json.dumps(simulations),headers={'Content-Type':'application/json'})
     print ret_val
 
 @csrf_exempt
@@ -74,4 +74,8 @@ def event(request):
         ret_val = [{'type':event.evt_type,'desc':event.desc,'vehicle_number':event.vehicle.number,'driver_name':event.driver.name,'lat':event.lat,'lon':event.lon}\
                    for event in Event.objects.all()]
     return HttpResponse(json.dumps(ret_val),content_type='application/json')
-    
+
+@csrf_exempt
+def accident(request):
+    ret_val = requests.patch('http://172.25.235.146:8080/api/simulate/accident',data=request.body,headers={'Content-Type':'application/json'})
+    return HttpResponse(json.dumps({}),content_type='application/json')

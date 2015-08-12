@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^driver/$',views.drivers,name='drivers'),
     url(r'^simulate/$',views.simulate,name='simulate'),
     url(r'^event/$',views.event,name='event'),
+    url(r'^accident/$',views.accident,name='accident'),
 ]

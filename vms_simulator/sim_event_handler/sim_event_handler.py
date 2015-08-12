@@ -94,6 +94,8 @@ def main():
               (r"/updates", web_handlers.UpdateHandler),
               (r"/simulate",web_handlers.SimulationSaveHandler),
               (r"/event", web_handlers.EventFetchHandler),
+              (r"/simulate/event", web_handlers.SimulateEventHandler),
+              
               ],
             cookie_secret="cook_{}".format(random.randint(1,1000000)),
             login_url="/auth/login",

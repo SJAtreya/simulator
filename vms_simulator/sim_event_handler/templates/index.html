@@ -32,7 +32,14 @@
 						<li class="active" id="fleetMenu"><a href="#monitor/fleet">Fleet</a></li>
 						<li id="tripMenu"><a href="#monitor/trip">Trips</a></li>
 						<li id="eventMenu"><a href="#monitor/event">Events</a></li>
-						<li id="simulateMenu"><a href="#simulate">Simulate</a></li>
+						<li class="dropdown" id="simulateMenu">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Simulate 
+							<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li id="simulateTrip"><a href="#simulate/trip">Trips</a></li>
+								<li id="simulateEvent"><a href="#simulate/event">Event</a></li>
+							</ul>
+						</li>
 					</ul>
 				</div>
 			</div>
@@ -158,6 +165,28 @@
 				</div>
 			</div>
 		</script>
+		<script id="simulateEventTemplate" type="text/x-handlebars-template">
+			<div class="page-header">
+			  <h1>Simulate Events </h1>
+			</div>
+			<div class="row">
+				<div class="col-xs-4">
+				</div>
+				<div class="col-xs-6 ">
+					<div class="input-group">
+						<select id="vin" class="form-control">
+							{{!#each vehicles}}
+								<option value="{{!this.fields.number}}">{{!this.fields.number}} {{!this.fields.make}}</option>
+							{{!/each}}
+						</select>
+						<div class="input-group-btn">
+							<a class="btn btn-default" id="startEventSimulation">Simulate</a>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</script>
 		
 		<script>
 			var tripSource  = $("#tripTemplate").html();
@@ -165,11 +194,13 @@
 			var simulateRowSource = $('#simulateRowTemplate').html();
 			var simulateSource = $('#simulateTemplate').html();
 			var eventSource = $('#eventTemplate').html();
+			var simulateEventSource = $('#simulateEventTemplate').html();
 			var fleetTemplate = Handlebars.compile(fleetSource);
 			var tripTemplate = Handlebars.compile(tripSource);
 			var simulateRowTemplate = Handlebars.compile(simulateRowSource);
 			var simulateTemplate = Handlebars.compile(simulateSource);
 			var eventTemplate = Handlebars.compile(eventSource);
+			var simulateEventTemplate = Handlebars.compile(simulateEventSource);
 			$(document).ready(function() {
 				setup();
 			});

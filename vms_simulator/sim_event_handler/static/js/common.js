@@ -230,6 +230,15 @@ function startSimulation(vehicles,drivers) {
 	});
 };
 
+function simulateEvent(vehicles) {
+	var htmlForEvent = simulateEventTemplate({"vehicles":vehicles});
+	$('#mainContainer').html(htmlForEvent);
+	$('#startEventSimulation').off('click').click(function() {
+		$.post('/simulate/event',{"vin":$('#vin').val()},function(data){
+		});
+	});
+};
+
 function setupRoutes() {
 	$('li').removeClass('active');
 	if (location.hash == '#monitor/fleet') {
@@ -244,8 +253,9 @@ function setupRoutes() {
 		fetchEventData(showEvents);
 		$('#eventMenu').addClass('active');
 	}
-	else if (location.hash == '#simulate') {
+	else if (location.hash == '#simulate/trip') {
 		$('#simulateMenu').addClass('active');
+		$('#simulateTrip').addClass('active');
 		$.ajax({
 		  dataType: "json",
 		  url: '/vehicle',
@@ -262,6 +272,18 @@ function setupRoutes() {
 		  }
 		});
 		
+	}
+	else if (location.hash == '#simulate/event') {
+		$('#simulateMenu').addClass('active');
+		$('#simulateEvent').addClass('active');
+		$.ajax({
+		  dataType: "json",
+		  url: '/vehicle',
+		  complete: function(jqXhr,statusText) {
+			var vehicles = eval('('+jqXhr.responseText.replace("u'","")+')');
+			simulateEvent(vehicles);
+		  }
+		});
 	}
 };
 
